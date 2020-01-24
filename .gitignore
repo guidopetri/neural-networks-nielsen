@@ -1,3 +1,5 @@
 .ipynb_checkpoints/
 *.sublime-project
 *.sublime-workspace
+*.gz
+old-chapter-1.py

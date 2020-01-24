@@ -8,9 +8,9 @@ class Network(object):
     def __init__(self, sizes):
         self.num_layers = len(sizes)
         self.sizes = sizes
-        self.biases = [np.random.randn(y, 1) for y in sizes[1:]]
-        self.weights = [np.random.randn(y, x)
-                        for x, y in zip(sizes[:-1], sizes[1:])]
+        self.biases = np.array([np.random.randn(y, 1) for y in sizes[1:]])
+        self.weights = np.array([np.random.randn(y, x)
+                                 for x, y in zip(sizes[:-1], sizes[1:])])
 
     def feedforward(self, activation):
         for bias, weight in zip(self.biases, self.weights):
@@ -60,20 +60,16 @@ class Network(object):
 
         # write matrix version
         raise NotImplementedError
-        grad_b = [np.zeros(bias.shape) for bias in self.biases]
-        grad_w = [np.zeros(weight.shape) for weight in self.weights]
+        grad_b = np.zeros(self.biases.shape)
+        grad_w = np.zeros(self.weights.shape)
 
         for x, y in mini_batch:
             delta_grad_b, delta_grad_w = self.backprop(x, y)
-            grad_b = [prior + delta
-                      for prior, delta in zip(grad_b, delta_grad_b)]
-            grad_w = [prior + delta
-                      for prior, delta in zip(grad_w, delta_grad_w)]
+            grad_b = grad_b + np.array(delta_grad_b)
+            grad_w = grad_w + np.array(delta_grad_w)
 
-        self.biases = [bias - (eta / len(mini_batch)) * posterior
-                       for bias, posterior in zip(self.biases, grad_b)]
-        self.weights = [weight - (eta / len(mini_batch)) * posterior
-                        for weight, posterior in zip(self.weights, grad_w)]
+        self.biases = self.biases - eta * grad_b / len(mini_batch)
+        self.weights = self.weights - eta * grad_w / len(mini_batch)
 
     def backprop(self, x, y):
         grad_b = [np.zeros(bias.shape) for bias in self.biases]
@@ -126,12 +122,12 @@ if __name__ == '__main__':
     import pickle
 
     with open('mnist_fixed.pckl', 'rb') as f:
-        data = pickle.load(f, encoding='latin1')
+        data = pickle.load(f)
         # unpack
         training_data, validation_data, test_data = data
 
     # init network
-    net = Network([784, 10])
+    net = Network([784, 30, 10])
     net.SGD(training_data,
             epochs=30,
             mini_batch_size=10,
